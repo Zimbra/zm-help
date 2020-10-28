@@ -132,7 +132,9 @@ if(gbSafari)
 	var nPos = gAgent.indexOf("version/");
 	if(nPos!=-1)
 	{
-		var nVersion = parseFloat(gAgent.substring(nPos+8,nPos+9));
+		var nVersionSplitArray = gAgent.substring(nPos+8).split(".");
+		var nVersion = parseFloat(nVersionSplitArray[0]);
+
 		if (nVersion >= 3)
 		{
 			gbSafari3=true;
