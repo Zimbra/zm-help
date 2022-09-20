@@ -3561,6 +3561,9 @@ function displayTopics( a_QueryResult)
 		{
 			var szTopicURL = a_QueryResult.aTopics[i].strUrl;
 			var bAddHighLight=false;
+			if (szTopicURL.includes("using_advanced_and_standard_clients.htm")){
+				continue;
+			}
 			if(gbAIRSSL) 
 			{
 				if(!_isRemoteUrl(szTopicURL) )

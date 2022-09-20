@@ -3338,6 +3338,9 @@ function displayTopics( a_QueryResult )
 		for( i = (g_CurPage-1)*nMaxResult; (i < a_QueryResult.aTopics.length)&&(i<(g_CurPage*nMaxResult)); i++ )
 		{
 			var szTopicURL = a_QueryResult.aTopics[i].strUrl;
+			if (szTopicURL.includes("using_advanced_and_standard_clients.htm")){
+				continue;
+			}
 			if(gbAIRSSL && !_isRemoteUrl(szTopicURL))
 			{
 				//if it is AIR, we need to add the highlight option now
