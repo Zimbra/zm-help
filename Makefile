@@ -12,8 +12,8 @@ all: zimbra-help-pkg
 
 stage-help-files:
 	mkdir -p build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/
-	cp -r en_US build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/en_US
 	cp -r de build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/de
+	cp -r en_US build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/en_US
 	cp -r es build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/es
 	cp -r fr build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/fr
 	cp -r it build/stage/$(NAME)/opt/zimbra/jetty_base/webapps/zimbra/help/it
