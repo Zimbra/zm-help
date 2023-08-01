@@ -32,6 +32,21 @@ references:
             root: ..
             paths: zm-help/build/dist/*
 
+   deploy_s3_job_steps: &deploy_s3_job_steps
+      docker:
+         - image: 'cimg/python:3.10'
+      resource_class: small
+
+      steps:
+         - attach_workspace:
+            at: ..
+         - aws-s3/sync:
+            from: 'build/'
+            to: 's3://files.zimbra.com/dev-releases/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM/archives/zm-help/'
+            aws-access-key-id: RELEASE_AWS_ACCESS_KEY_ID
+            aws-secret-access-key: RELEASE_AWS_SECRET_ACCESS_KEY
+            aws-region: RELEASE_AWS_DEFAULT_REGION
+
 ############################################################################
 
 jobs:
@@ -77,6 +92,11 @@ jobs:
          - image: zimbra/zm-base-os:devcore-centos-7
       <<: *build_job_steps
 
+   deploy_s3:
+      working_directory: ~/zm-help
+      shell: /bin/bash -eo pipefail
+      <<: *deploy_s3_job_steps
+
 ############################################################################
 
 workflows:
@@ -103,3 +123,17 @@ workflows:
          - build_c7:
             requires:
                - checkout
+         
+         - deploy_s3_hold:
+            type: approval
+            requires:
+               - build_u20
+               - build_u18
+               - build_c8
+               - build_c7
+
+         - deploy_s3:
+            context:
+               - aws
+            requires:
+               - deploy_s3_hold
