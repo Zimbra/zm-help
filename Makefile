@@ -31,6 +31,7 @@ zimbra-help-pkg: stage-help-files
 		--pkg-release=1 \
 		--pkg-name=$(NAME) \
 		--pkg-summary='$(DESC)' \
+		--pkg-pre-install-script='scripts/preinst.sh' \
 		--pkg-depends='zimbra-store (>= 8.8.15)' \
 		--pkg-installs='/opt/zimbra/jetty_base/webapps/zimbra/help'
 
