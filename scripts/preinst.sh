@@ -1,5 +1,5 @@
 #!/bin/bash
-echo -n "WARNING: This package contains security vulnerabilities. Do you want to want to continue installation ? (y/n) " >/dev/tty
+echo -n "WARNING: This package contains security vulnerabilities. Do you want to continue installation ? (y/n) " >/dev/tty
 
 if exec </dev/tty; then
     read response;
