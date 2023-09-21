@@ -129,6 +129,7 @@ workflows:
             requires:
                - build_u20
                - build_u18
+               - build_u16
                - build_c8
                - build_c7
 
