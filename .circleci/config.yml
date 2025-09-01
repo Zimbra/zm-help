@@ -57,71 +57,11 @@ jobs:
          - image: zimbra/zm-base-os:core-ubuntu
       <<: *checkout_job_steps
 
-   build_u22:
+   build_u24:
       working_directory: ~/zm-help
       shell: /bin/bash -eo pipefail
       docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_u20:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-20.04
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_u18:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_u16:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-16.04
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_c9:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-9
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_c8:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-8
-           auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
-      <<: *build_job_steps
-
-   build_c7:
-      working_directory: ~/zm-help
-      shell: /bin/bash -eo pipefail
-      docker:
-         - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-7
+         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-24.04
            auth:
             username: $DOCKER_USER
             password: $DOCKER_PASS
@@ -143,37 +83,7 @@ workflows:
          - checkout:
             requires:
               - build
-         - build_u22:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_u20:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_u18:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_u16:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_c9:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_c8:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-         - build_c7:
+         - build_u24:
             requires:
                - checkout
             context:
@@ -182,13 +92,7 @@ workflows:
          - deploy_s3_hold:
             type: approval
             requires:
-               - build_u22
-               - build_u20
-               - build_u18
-               - build_u16
-               - build_c9
-               - build_c8
-               - build_c7
+               - build_u24
 
          - deploy_s3:
             context:
