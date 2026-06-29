@@ -53,7 +53,6 @@ references:
 
    # ---------------------------------------------------------------------------
    # publish_packages — uploads packages to Nexus as-is (develop branch only)
-   # working_directory is ~/zm-help so path is "build/dist"
    # ---------------------------------------------------------------------------
    publish_packages_job_steps: &publish_packages_job_steps
       steps:
@@ -168,8 +167,7 @@ workflows:
    version: 2
 
    # -------------------------------------------------------------------------------
-   # develop branch: auto checkout → all builds → publish_packages to Nexus
-   # no approval gate, no S3, packages uploaded as-is
+   # develop branch: checkout → builds → publish_packages to Nexus
    # -------------------------------------------------------------------------------
    develop-workflow:
       jobs:
@@ -178,7 +176,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_u22:
             requires:
@@ -187,7 +185,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_u20:
             requires:
@@ -196,7 +194,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_u18:
             requires:
@@ -205,7 +203,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_u16:
             requires:
@@ -214,7 +212,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_c9:
             requires:
@@ -223,7 +221,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_c8:
             requires:
@@ -232,7 +230,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - build_c7:
             requires:
@@ -241,7 +239,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
          - publish_packages:
             context:
@@ -257,10 +255,10 @@ workflows:
                - build_c7
             filters:
               branches:
-                only: ZCICD-34
+                only: develop
 
    # -------------------------------------------------------------------------------
-   # non-develop branches: unchanged — approval-gated builds → S3 upload
+   # non-develop branches: unchanged_workflow — approval-gated builds → S3 upload
    # -------------------------------------------------------------------------------
    main:
       jobs:
@@ -268,14 +266,14 @@ workflows:
             type: approval
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - checkout:
             requires:
                - build
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_u22:
             requires:
@@ -284,7 +282,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_u20:
             requires:
@@ -293,7 +291,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_u18:
             requires:
@@ -302,7 +300,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_u16:
             requires:
@@ -311,7 +309,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_c9:
             requires:
@@ -320,7 +318,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_c8:
             requires:
@@ -329,7 +327,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - build_c7:
             requires:
@@ -338,7 +336,7 @@ workflows:
                - docker-dev-registry
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
 
          - deploy_s3_hold:
             type: approval
@@ -352,8 +350,7 @@ workflows:
                - build_c7
             filters:
               branches:
-                ignore: ZCICD-34
-
+                ignore: develop
          - deploy_s3:
             context:
                - aws
@@ -361,4 +358,4 @@ workflows:
                - deploy_s3_hold
             filters:
               branches:
-                ignore: ZCICD-34
+                ignore: develop
