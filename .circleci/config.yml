@@ -8,16 +8,20 @@ references:
    checkout_job_steps: &checkout_job_steps
       steps:
          - checkout
-         - run: 
+         - run:
             name: Checking out dependencies
             command: |
-               git clone -b hotfix/speed-up-debian-package-creation --single-branch https://github.com/Zimbra/zm-pkg-tool.git ~/zm-pkg-tool
+               git clone -b hotfix/speed-up-debian-package-creation --single-branch \
+                  https://github.com/Zimbra/zm-pkg-tool.git ~/zm-pkg-tool
                echo "BUILD_NO=$CIRCLE_BUILD_NUM" > config.build
+               git clone -b master --single-branch \
+                  https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git ~/zm-nexus
          - persist_to_workspace:
             root: ..
             paths:
                - zm-help
                - zm-pkg-tool
+               - zm-nexus
 
    build_job_steps: &build_job_steps
       steps:
@@ -30,13 +34,13 @@ references:
             path: build/dist
          - persist_to_workspace:
             root: ..
-            paths: zm-help/build/dist/*
+            paths:
+               - zm-help/build/dist/*
 
    deploy_s3_job_steps: &deploy_s3_job_steps
       docker:
          - image: 'cimg/python:3.10'
       resource_class: small
-
       steps:
          - attach_workspace:
             at: ..
@@ -46,6 +50,20 @@ references:
             aws-access-key-id: RELEASE_AWS_ACCESS_KEY_ID
             aws-secret-access-key: RELEASE_AWS_SECRET_ACCESS_KEY
             aws-region: RELEASE_AWS_DEFAULT_REGION
+
+   # ---------------------------------------------------------------------------
+   # publish_packages — uploads packages to Nexus as-is (develop branch only)
+   # working_directory is ~/zm-help so path is "build/dist"
+   # ---------------------------------------------------------------------------
+   publish_packages_job_steps: &publish_packages_job_steps
+      steps:
+         - attach_workspace:
+            at: ..
+         - run:
+            name: Publish package artifacts to Nexus
+            command: |
+               sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl
+               bash ../zm-nexus/scripts/publish-packages-to-nexus.sh "build/dist"
 
 ############################################################################
 
@@ -63,8 +81,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_u20:
@@ -73,8 +91,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-20.04
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_u18:
@@ -83,8 +101,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_u16:
@@ -93,8 +111,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-16.04
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_c9:
@@ -103,8 +121,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-9
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_c8:
@@ -113,8 +131,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-8
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    build_c7:
@@ -123,8 +141,8 @@ jobs:
       docker:
          - image: $DOCKER_REGISTRY/zm-base-os:devcore-centos-7
            auth:
-            username: $DOCKER_USER
-            password: $DOCKER_PASS
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
       <<: *build_job_steps
 
    deploy_s3:
@@ -132,53 +150,196 @@ jobs:
       shell: /bin/bash -eo pipefail
       <<: *deploy_s3_job_steps
 
+   publish_packages:
+      working_directory: ~/zm-help
+      shell: /bin/bash -eo pipefail
+      circleci_ip_ranges: true
+      docker:
+         - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+           auth:
+             username: $DOCKER_USER
+             password: $DOCKER_PASS
+      resource_class: small
+      <<: *publish_packages_job_steps
+
 ############################################################################
 
 workflows:
    version: 2
-   main:
+
+   # -------------------------------------------------------------------------------
+   # develop branch: auto checkout → all builds → publish_packages to Nexus
+   # no approval gate, no S3, packages uploaded as-is
+   # -------------------------------------------------------------------------------
+   develop-workflow:
       jobs:
-         - build:
-            type: approval
          - checkout:
-            requires:
-              - build
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_u22:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_u20:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_u18:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_u16:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_c9:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_c8:
             requires:
                - checkout
             context:
                - docker-dev-registry
+            filters:
+              branches:
+                only: ZCICD-34
+
          - build_c7:
             requires:
                - checkout
             context:
                - docker-dev-registry
-         
+            filters:
+              branches:
+                only: ZCICD-34
+
+         - publish_packages:
+            context:
+               - docker-dev-registry
+               - nexus-dev-artifactory
+            requires:
+               - build_u22
+               - build_u20
+               - build_u18
+               - build_u16
+               - build_c9
+               - build_c8
+               - build_c7
+            filters:
+              branches:
+                only: ZCICD-34
+
+   # -------------------------------------------------------------------------------
+   # non-develop branches: unchanged — approval-gated builds → S3 upload
+   # -------------------------------------------------------------------------------
+   main:
+      jobs:
+         - build:
+            type: approval
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - checkout:
+            requires:
+               - build
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_u22:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_u20:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_u18:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_u16:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_c9:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_c8:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
+         - build_c7:
+            requires:
+               - checkout
+            context:
+               - docker-dev-registry
+            filters:
+              branches:
+                ignore: ZCICD-34
+
          - deploy_s3_hold:
             type: approval
             requires:
@@ -189,9 +350,15 @@ workflows:
                - build_c9
                - build_c8
                - build_c7
+            filters:
+              branches:
+                ignore: ZCICD-34
 
          - deploy_s3:
             context:
                - aws
             requires:
                - deploy_s3_hold
+            filters:
+              branches:
+                ignore: ZCICD-34
