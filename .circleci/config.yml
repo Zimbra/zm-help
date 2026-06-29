@@ -51,9 +51,6 @@ references:
             aws-secret-access-key: RELEASE_AWS_SECRET_ACCESS_KEY
             aws-region: RELEASE_AWS_DEFAULT_REGION
 
-   # ---------------------------------------------------------------------------
-   # publish_packages — uploads packages to Nexus as-is (develop branch only)
-   # ---------------------------------------------------------------------------
    publish_packages_job_steps: &publish_packages_job_steps
       steps:
          - attach_workspace:
@@ -166,9 +163,6 @@ jobs:
 workflows:
    version: 2
 
-   # -------------------------------------------------------------------------------
-   # develop branch: checkout → builds → publish_packages to Nexus
-   # -------------------------------------------------------------------------------
    develop-workflow:
       jobs:
          - checkout:
@@ -257,9 +251,6 @@ workflows:
               branches:
                 only: develop
 
-   # -------------------------------------------------------------------------------
-   # non-develop branches: unchanged_workflow — approval-gated builds → S3 upload
-   # -------------------------------------------------------------------------------
    main:
       jobs:
          - build:
@@ -271,6 +262,8 @@ workflows:
          - checkout:
             requires:
                - build
+            context:
+               - docker-dev-registry
             filters:
               branches:
                 ignore: develop
@@ -351,6 +344,7 @@ workflows:
             filters:
               branches:
                 ignore: develop
+
          - deploy_s3:
             context:
                - aws
