@@ -226,15 +226,6 @@ workflows:
               branches:
                 only: develop
 
-         - build_c7:
-            requires:
-               - checkout
-            context:
-               - docker-dev-registry
-            filters:
-              branches:
-                only: develop
-
          - publish_packages:
             context:
                - docker-dev-registry
@@ -246,7 +237,6 @@ workflows:
                - build_u16
                - build_c9
                - build_c8
-               - build_c7
             filters:
               branches:
                 only: develop
@@ -327,9 +317,6 @@ workflows:
                - checkout
             context:
                - docker-dev-registry
-            filters:
-              branches:
-                ignore: develop
 
          - deploy_s3_hold:
             type: approval
